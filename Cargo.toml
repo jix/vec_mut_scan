@@ -1,6 +1,6 @@
 [package]
 name = "vec_mut_scan"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["Jannis Harder <me@jix.one>"]
 edition = "2018"
 description = "Forward scan over a vector with mutation and item removal"
