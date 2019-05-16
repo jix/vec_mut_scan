@@ -1,0 +1,47 @@
+version: 2
+
+jobs:
+  test_and_deploy:
+    docker:
+      - image: jixone/rust-ci:rust-stable
+    steps:
+      - checkout
+      - run: |
+          cargo build
+          cargo test
+          if [ $CIRCLE_BRANCH == staging ]; then
+            bash .circleci/setup_git.sh
+            VER=$(bash .circleci/tag_release.sh)
+
+            if [[ $VER == *-* ]]; then
+              VER=master
+            fi
+
+            mkdir -p /tmp/workspace/release
+
+            if [[ $VER != master ]]; then
+              ghr -t $GITHUB_TOKEN \
+                -u $CIRCLE_PROJECT_USERNAME \
+                -r $CIRCLE_PROJECT_REPONAME \
+                -c $CIRCLE_SHA1 \
+                -n "vec_mut_scan $VER" \
+                -delete v$VER \
+                /tmp/workspace/release
+
+              cargo login $CARGO_TOKEN
+
+              cargo publish
+            fi
+          fi
+
+bors_branches: &bors_branches
+  filters:
+    branches:
+      only: [staging, trying]
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - test_end_deploy:
+          <<: *bors_branches
