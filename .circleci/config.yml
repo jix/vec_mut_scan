@@ -3,7 +3,7 @@ version: 2
 jobs:
   test_and_deploy:
     docker:
-      - image: jixone/rust-ci:rust-stable
+      - image: jixone/rust-ci:rust-deploy
     steps:
       - checkout
       - run: |
