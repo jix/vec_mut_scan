@@ -20,13 +20,15 @@ jobs:
             mkdir -p /tmp/workspace/release
 
             if [[ $VER != master ]]; then
+              cargo package
+
               ghr -t $GITHUB_TOKEN \
                 -u $CIRCLE_PROJECT_USERNAME \
                 -r $CIRCLE_PROJECT_REPONAME \
                 -c $CIRCLE_SHA1 \
                 -n "vec_mut_scan $VER" \
                 -delete v$VER \
-                /tmp/workspace/release
+                target/package
 
               cargo login $CARGO_TOKEN
 
