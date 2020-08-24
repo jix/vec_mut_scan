@@ -1,4 +1,0 @@
-status = [
-  "ci/circleci: test_and_deploy",
-]
-delete_merged_branches = true
