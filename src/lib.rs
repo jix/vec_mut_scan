@@ -50,6 +50,7 @@ impl<'a, T: 'a> VecMutScan<'a, T> {
     /// Advance to the next item of the vector.
     ///
     /// This returns a reference wrapper that enables item removal (see [`VecMutScanItem`]).
+    #[allow(clippy::should_implement_trait)] // can't be an iteratore due to lifetimes
     pub fn next<'s>(&'s mut self) -> Option<VecMutScanItem<'s, 'a, T>> {
         if self.read != self.end {
             Some(VecMutScanItem { scan: self })
@@ -142,10 +143,7 @@ mod tests {
 
     #[test]
     fn check_item_drops() {
-        let mut input: Vec<_> = vec![0, 1, 2, 3, 4, 5, 6]
-            .into_iter()
-            .map(|v| Rc::new(v))
-            .collect();
+        let mut input: Vec<_> = vec![0, 1, 2, 3, 4, 5, 6].into_iter().map(Rc::new).collect();
         let input_copy = input.clone();
 
         let mut scan = VecMutScan::new(&mut input);
