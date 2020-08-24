@@ -140,8 +140,6 @@ mod tests {
 
     use std::rc::Rc;
 
-    use proptest::*;
-
     #[test]
     fn check_item_drops() {
         let mut input: Vec<_> = vec![0, 1, 2, 3, 4, 5, 6]
@@ -170,50 +168,5 @@ mod tests {
 
         assert_eq!(ref_counts, vec![2, 2, 1, 2, 1, 2, 2]);
         assert_eq!(keep.map(|rc| Rc::strong_count(&rc)), Some(2));
-    }
-
-    proptest! {
-        #[test]
-        fn mutate_and_remove(input in collection::vec(0..10usize, 0..100)) {
-            let mut test = input.clone();
-            let mut scan = VecMutScan::new(&mut test);
-            let mut input_iter = input.iter().cloned();
-            while let Some(mut item) = scan.next() {
-                let value = *item;
-                prop_assert_eq!(input_iter.next(), Some(value));
-                if value == 0 {
-                    item.replace(10);
-                } else if value < 5 {
-                    prop_assert_eq!(item.remove(), value);
-                } else if value == 9 {
-                    break;
-                } else {
-                    *item *= 2;
-                }
-            }
-            drop(scan);
-
-            let mut found_9 = false;
-
-            let expected: Vec<_> = input
-                .iter()
-                .flat_map(|&value| {
-                    if found_9 {
-                        Some(value)
-                    } else if value == 0 {
-                        Some(10)
-                    } else if value < 5 {
-                        None
-                    } else if value == 9 {
-                        found_9 = true;
-                        Some(value)
-                    } else {
-                        Some(value * 2)
-                    }
-                })
-                .collect();
-
-            prop_assert_eq!(test, expected);
-        }
     }
 }

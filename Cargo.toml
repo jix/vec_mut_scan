@@ -9,6 +9,3 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 [dependencies]
-
-[dev-dependencies]
-proptest = "0.9.3"
