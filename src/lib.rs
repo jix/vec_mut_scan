@@ -169,14 +169,15 @@ impl<'s, 'a, T: 'a> VecMutScanItem<'s, 'a, T> {
         }
     }
 
-    /// Replaces this item with a new value.
+    /// Replaces this item with a new value, returns the old value.
     ///
-    /// This is equivalent to assigning a new value using [`DerefMut`], but can avoid an
-    /// intermediate move within the vector's storage.
-    pub fn replace(self, value: T) {
+    /// This is equivalent to assigning a new value or calling [`std::mem::replace`] on the mutable
+    /// reference obtained by using [`DerefMut`], but can avoid an intermediate move within the
+    /// vector's buffer.
+    pub fn replace(self, value: T) -> T {
         unsafe {
-            // Read the next item, taking local ownership of the data to immediatly drop it.
-            ptr::read(self.scan.base.add(self.scan.read));
+            // Read the next item, taking local ownership of the data to return it.
+            let result = ptr::read(self.scan.base.add(self.scan.read));
 
             // Write the replacement in place of the removed item, adjusted for the gap between
             // write and read (see diagrams above).
@@ -187,6 +188,7 @@ impl<'s, 'a, T: 'a> VecMutScanItem<'s, 'a, T> {
             // Do not run the `VecMutScanItem`'s drop, as it handles the case for a non-replaced
             // item and would perform a now invalid update of the `VecMutScan`.
             mem::forget(self);
+            result
         }
     }
 }
@@ -235,12 +237,13 @@ mod tests {
 
     #[test]
     fn check_item_drops() {
-        let mut input: Vec<_> = vec![0, 1, 2, 3, 4, 5, 6].into_iter().map(Rc::new).collect();
+        let mut input: Vec<_> = vec![0, 1, 2, 3, 4, 5, 6, 7].into_iter().map(Rc::new).collect();
         let input_copy = input.clone();
 
         let mut scan = VecMutScan::new(&mut input);
 
         let mut keep = None;
+        let mut also_keep = None;
 
         while let Some(item) = scan.next() {
             if **item == 2 {
@@ -250,13 +253,20 @@ mod tests {
             } else if **item == 4 {
                 item.remove();
             } else if **item == 5 {
+                also_keep = Some(item.replace(Rc::new(20)));
+            } else if **item == 6 {
                 break;
             }
         }
 
+        let _keep_copy = keep.clone();
+        let _also_keep_copy_1 = also_keep.clone();
+        let _also_keep_copy_2 = also_keep.clone();
+
         let ref_counts: Vec<_> = input_copy.iter().map(|rc| Rc::strong_count(rc)).collect();
 
-        assert_eq!(ref_counts, vec![2, 2, 1, 2, 1, 2, 2]);
-        assert_eq!(keep.map(|rc| Rc::strong_count(&rc)), Some(2));
+        assert_eq!(ref_counts, vec![2, 2, 1, 3, 1, 4, 2, 2]);
+        assert_eq!(keep.map(|rc| Rc::strong_count(&rc)), Some(3));
+        assert_eq!(also_keep.map(|rc| Rc::strong_count(&rc)), Some(4));
     }
 }
