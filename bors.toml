@@ -1,4 +1,2 @@
-status = [
-  "ci/circleci: test_and_deploy",
-]
+status = ["bors-gate"]
 delete_merged_branches = true
