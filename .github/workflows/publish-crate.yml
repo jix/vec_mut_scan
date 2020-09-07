@@ -1,27 +1,41 @@
 name: Publish Crate
 
-on: workflow_dispatch
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  project_display_name: vec_mut_scan
 
 jobs:
   publish-crate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "^3.8"
       - name: Pre-Publish Checks
+        id: pre_publish_checks
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          # check script
-          VER=$(perl -ne 'if(/^version = "(.*)"/){print $1;exit}' Cargo.toml)
-          if [[ $(git rev-parse HEAD) != $(git rev-parse "refs/tags/v$VER") ]]; then
-            echo "::error::Commit is not tagged as release"
-            exit 1
-          fi
-          if ! hub ci-status -f '%t: %S%n' | grep -q 'bors: success'; then
-            echo "::error::Commit was not checked by bors"
-            exit 1
-          fi
+        run: python .github/workflows/publish-crate-checks.py
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ env.project_display_name }} ${{ steps.pre_publish_checks.outputs.version }}
+          body: ${{ fromJson(steps.pre_publish_checks.outputs.changelog) }}
+          draft: false
+          prerelease: false
       - name: Publish Crate
         run: |
           cargo login ${{ secrets.CARGO_TOKEN }}
           cargo publish
+      - name: Push to release Branch
+        run: |
+          git push origin +HEAD:release

@@ -1,0 +1,9 @@
+# Configuration for the project template tool I use to keep my projects in sync
+
+[template]
+name = 'rust'
+version = 3
+
+[config]
+name = 'vec_mut_scan'
+github.owner = 'jix'
