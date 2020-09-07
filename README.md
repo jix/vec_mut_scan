@@ -1,10 +1,9 @@
 # vec_mut_scan
 
-[![github][github-badge]][github] [![crates.io][crate-badge]][crate] [![docs.rs][docs-badge]][docs]
-
-[github]: https://github.com/jix/vec_mut_scan
-[crate]: https://crates.io/crates/vec_mut_scan
-[docs]: https://docs.rs/vec_mut_scan/*/vec_mut_scan
+[![ci][ci-badge]](https://github.com/jix/vec_mut_scan/actions?query=workflow%3A%22Check+Last+Release%22)
+[![github][github-badge]](https://github.com/jix/vec_mut_scan)
+[![crates.io][crate-badge]](https://crates.io/crates/vec_mut_scan)
+[![docs.rs][docs-badge]](https://docs.rs/vec_mut_scan/*/vec_mut_scan)
 
 Forward scan over a vector with mutation and item removal.
 
@@ -22,19 +21,17 @@ the `Iterator` trait.
 
 ## License
 
-The vec_mut_scan source code is licensed under either of
-
-  * Apache License, Version 2.0 (see [LICENSE-APACHE](LICENSE-APACHE))
-  * MIT license (see [LICENSE-MIT](LICENSE-MIT))
-
-at your option.
+This software is available under the Zero-Clause BSD license, see
+[COPYRIGHT](COPYRIGHT) for full licensing information and exceptions to this.
 
 ### Contribution
 
-Unless You explicitly state otherwise, any Contribution intentionally submitted
-for inclusion in the Work by You, as defined in the Apache-2.0 license, shall
-be dual licensed as above, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this software by you shall be licensed as defined in
+[COPYRIGHT](COPYRIGHT).
 
+
+[ci-badge]: https://img.shields.io/github/workflow/status/jix/vec_mut_scan/Check%20Last%20Release?style=flat-square
 [github-badge]: https://img.shields.io/badge/github-jix/vec_mut_scan-blueviolet?style=flat-square
 [crate-badge]: https://img.shields.io/crates/v/vec_mut_scan?style=flat-square
 [docs-badge]: https://img.shields.io/badge/docs.rs-vec_mut_scan-informational?style=flat-square

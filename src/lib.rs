@@ -1,6 +1,9 @@
 //! Forward scan over a vector with mutation and item removal.
-use std::ops::{Deref, DerefMut};
-use std::{mem, ptr};
+use std::{
+    mem,
+    ops::{Deref, DerefMut},
+    ptr,
+};
 
 /// Forward scan over a vector with mutation and item removal.
 ///
@@ -237,7 +240,10 @@ mod tests {
 
     #[test]
     fn check_item_drops() {
-        let mut input: Vec<_> = vec![0, 1, 2, 3, 4, 5, 6, 7].into_iter().map(Rc::new).collect();
+        let mut input: Vec<_> = vec![0, 1, 2, 3, 4, 5, 6, 7]
+            .into_iter()
+            .map(Rc::new)
+            .collect();
         let input_copy = input.clone();
 
         let mut scan = VecMutScan::new(&mut input);
