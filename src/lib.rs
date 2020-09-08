@@ -106,7 +106,7 @@ impl<'a, T: 'a> VecMutScan<'a, T> {
     /// Advance to the next item of the vector.
     ///
     /// This returns a reference wrapper that enables item removal (see [`VecMutScanItem`]).
-    #[allow(clippy::should_implement_trait)] // can't be an iteratore due to lifetimes
+    #[allow(clippy::should_implement_trait)] // can't be an iterator due to lifetimes
     pub fn next<'s>(&'s mut self) -> Option<VecMutScanItem<'s, 'a, T>> {
         // This just constructs a VecMutScanItem without updating any state. The read and write
         // offsets are adjusted by `VecMutScanItem` whenever it is dropped or one of its
@@ -115,6 +115,48 @@ impl<'a, T: 'a> VecMutScan<'a, T> {
             Some(VecMutScanItem { scan: self })
         } else {
             None
+        }
+    }
+
+    /// Access the whole vector.
+    ///
+    /// This provides access to the whole vector at any point during the scan. In general while
+    /// scanning, the vector content is not contiguous, thus it is returned as two slices, a prefix
+    /// and a suffix. The prefix contains all elements already visited while the suffix contains the
+    /// remaining elements starting with the element that will be returned by the following
+    /// [`next`][VecMutScan::next] call.
+    ///
+    /// This method is also present on the [`VecMutScanItem`] reference wrapper returned by
+    /// [`next`][VecMutScan::next], allowing access while that wrapper borrows this `VecMutScan`.
+    pub fn slices(&self) -> (&[T], &[T]) {
+        unsafe {
+            // These slices cover the two disjoint parts 0..write and read..end which contain the
+            // currently valid data.
+            (
+                std::slice::from_raw_parts(self.base, self.write),
+                std::slice::from_raw_parts(self.base.add(self.read), self.end - self.read),
+            )
+        }
+    }
+
+    /// Access and mutate the whole vector.
+    ///
+    /// This provides mutable access to the whole vector at any point during the scan. In general
+    /// while scanning, the vector content is not contiguous, thus it is returned as two slices, a
+    /// prefix and a suffix. The prefix contains all elements already visited while the suffix
+    /// contains the remaining elements starting with the element that will be returned by the
+    /// following [`next`][VecMutScan::next] call.
+    ///
+    /// This method is also present on the [`VecMutScanItem`] reference wrapper returned by
+    /// [`next`][VecMutScan::next], allowing access while that wrapper borrows this `VecMutScan`.
+    pub fn slices_mut(&mut self) -> (&mut [T], &mut [T]) {
+        unsafe {
+            // These slices cover the two disjoint parts 0..write and read..end which contain the
+            // currently valid data.
+            (
+                std::slice::from_raw_parts_mut(self.base, self.write),
+                std::slice::from_raw_parts_mut(self.base.add(self.read), self.end - self.read),
+            )
         }
     }
 }
@@ -193,6 +235,32 @@ impl<'s, 'a, T: 'a> VecMutScanItem<'s, 'a, T> {
             mem::forget(self);
             result
         }
+    }
+
+    /// Access the whole vector.
+    ///
+    /// This provides access to the whole vector at any point during the scan. In general while
+    /// scanning, the vector content is not contiguous, thus it is returned as two slices, a prefix
+    /// and a suffix. The prefix contains all elements already visited while the suffix contains the
+    /// remaining elements starting with this element.
+    ///
+    /// This method is also present on the [`VecMutScan`] borrowed by this reference wrapper,
+    /// allowing access without an active `VecMutScanItem`.
+    pub fn slices(&self) -> (&[T], &[T]) {
+        self.scan.slices()
+    }
+
+    /// Access and mutate the whole vector.
+    ///
+    /// This provides mutable access to the whole vector at any point during the scan. In general
+    /// while scanning, the vector content is not contiguous, thus it is returned as two slices, a
+    /// prefix and a suffix. The prefix contains all elements already visited while the suffix
+    /// contains the remaining elements starting with this element.
+    ///
+    /// This method is also present on the [`VecMutScan`] borrowed by this reference wrapper,
+    /// allowing access without an active `VecMutScanItem`.
+    pub fn slices_mut(&mut self) -> (&mut [T], &mut [T]) {
+        self.scan.slices_mut()
     }
 }
 
@@ -274,5 +342,58 @@ mod tests {
         assert_eq!(ref_counts, vec![2, 2, 1, 3, 1, 4, 2, 2]);
         assert_eq!(keep.map(|rc| Rc::strong_count(&rc)), Some(3));
         assert_eq!(also_keep.map(|rc| Rc::strong_count(&rc)), Some(4));
+    }
+
+    #[test]
+    fn check_slices() {
+        let mut input: Vec<_> = (0..16).collect();
+
+        let mut scan = VecMutScan::new(&mut input);
+
+        loop {
+            let value;
+            match scan.next() {
+                None => break,
+                Some(item) => {
+                    value = *item;
+                    let (a, b) = item.slices();
+                    assert!(a.iter().all(|i| *i < value && *i % 2 != 0));
+                    assert!(b.iter().all(|i| *i >= value));
+
+                    if value % 2 == 0 {
+                        item.remove();
+                    } else {
+                        drop(item);
+                    }
+                }
+            }
+            if value % 2 != 0 {
+                assert_eq!(scan.slices().0.last().unwrap(), &value);
+            }
+            if let Some(&first) = scan.slices().1.first() {
+                assert_eq!(first, value + 1);
+            }
+        }
+    }
+
+    #[test]
+    fn check_slices_mut() {
+        let mut input = b"foo bar baz".to_vec();
+
+        let mut scan = VecMutScan::new(&mut input);
+
+        while let Some(mut value) = scan.next() {
+            if *value == b' ' {
+                let suffix = value.slices_mut().1;
+                if suffix.len() > 1 {
+                    suffix[1] = suffix[1].to_ascii_uppercase();
+                }
+                value.remove();
+            }
+        }
+
+        drop(scan);
+
+        assert_eq!(input, b"fooBarBaz");
     }
 }
