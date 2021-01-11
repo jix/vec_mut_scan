@@ -616,6 +616,14 @@ impl<'s, 'a, T: 'a> VecGrowScanItem<'s, 'a, T> {
         }
     }
 
+    /// Replace the current item with a sequence of items. Returns the replaced item.
+    pub fn replace_with_many(mut self, values: impl IntoIterator<Item = T>) -> T {
+        let result = unsafe { self.remove_deferring_forget() };
+        let scan = self.into_inner_forget();
+        scan.insert_many(values);
+        result
+    }
+
     /// Insert an item before the current item.
     pub fn insert_before(&mut self, value: T) {
         self.scan.insert(value);
@@ -647,14 +655,6 @@ impl<'s, 'a, T: 'a> VecGrowScanItem<'s, 'a, T> {
     /// `VecGrowScanItem`.
     pub fn insert_many_after(self, values: impl IntoIterator<Item = T>) {
         self.into_inner().insert_many(values)
-    }
-
-    /// Replace the current item with a sequence of items. Returns the replaced item.
-    pub fn replace_with_many(mut self, values: impl IntoIterator<Item = T>) -> T {
-        let result = unsafe { self.remove_deferring_forget() };
-        let scan = self.into_inner_forget();
-        scan.insert_many(values);
-        result
     }
 
     /// Access the whole vector.
