@@ -616,12 +616,38 @@ impl<'s, 'a, T: 'a> VecGrowScanItem<'s, 'a, T> {
         }
     }
 
+    // NOTE: in the following functions, take special care to behave properly when a callback
+    // (including the iterator) panics.
+
     /// Replace the current item with a sequence of items. Returns the replaced item.
     pub fn replace_with_many(mut self, values: impl IntoIterator<Item = T>) -> T {
         let result = unsafe { self.remove_deferring_forget() };
         let scan = self.into_inner_forget();
+
         scan.insert_many(values);
         result
+    }
+
+    /// Like [`replace`][VecGrowScanItem::replace], but compute the replacement value with
+    /// ownership of the removed item.
+    pub fn replace_with(mut self, f: impl FnOnce(T) -> T) {
+        let removed = unsafe { self.remove_deferring_forget() };
+        let scan = self.into_inner_forget();
+
+        scan.insert(f(removed));
+    }
+
+    /// Like [`replace_with_many`][VecGrowScanItem::replace_with_many], but compute the replacement
+    /// sequence with ownership of the removed item.
+    pub fn replace_with_many_with<F, I>(mut self, f: F)
+    where
+        F: FnOnce(T) -> I,
+        I: IntoIterator<Item = T>,
+    {
+        let removed = unsafe { self.remove_deferring_forget() };
+        let scan = self.into_inner_forget();
+
+        scan.insert_many(f(removed));
     }
 
     /// Insert an item before the current item.
