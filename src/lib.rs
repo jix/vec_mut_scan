@@ -513,8 +513,10 @@ impl<'a, T: 'a> Drop for VecGrowScan<'a, T> {
                 self.vec.set_len(self.end);
             }
 
-            self.vec
-                .extend(mem::replace(&mut self.queue, VecDeque::new()).into_iter());
+            self.vec.splice(
+                self.write..self.write,
+                mem::replace(&mut self.queue, VecDeque::new()).into_iter(),
+            );
         }
     }
 }
@@ -957,5 +959,22 @@ mod tests {
         drop(scan);
 
         assert_eq!(nums, [1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn drop_after_partial_scan_with_inserts() {
+        let mut nums = vec![1, 2, 5, 6];
+        let mut scan = VecGrowScan::new(&mut nums);
+
+        while let Some(mut value) = scan.next() {
+            if *value > 2 {
+                value.insert_many_before([3, 4].iter().copied());
+                break;
+            }
+        }
+
+        drop(scan);
+
+        assert_eq!(nums, [1, 2, 3, 4, 5, 6]);
     }
 }
