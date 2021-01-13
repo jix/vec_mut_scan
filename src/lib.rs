@@ -977,4 +977,43 @@ mod tests {
 
         assert_eq!(nums, [1, 2, 3, 4, 5, 6]);
     }
+
+    #[test]
+    fn replace_with() {
+        let mut vec = (1..=5).map(Box::new).collect();
+        let mut scan = VecGrowScan::new(&mut vec);
+
+        while let Some(value) = scan.next() {
+            if **value % 2 == 0 {
+                value.replace_with(|x| Box::new(*x * 2));
+            }
+        }
+
+        drop(scan);
+
+        assert_eq!(
+            vec,
+            [
+                Box::new(1),
+                Box::new(4),
+                Box::new(3),
+                Box::new(8),
+                Box::new(5),
+            ]
+        );
+    }
+
+    #[test]
+    fn replace_with_many_with() {
+        let mut vec = vec![3, 6, 9, 12];
+        let mut scan = VecGrowScan::new(&mut vec);
+
+        while let Some(value) = scan.next() {
+            value.replace_with_many_with(|x| vec![x - 1, x, x + 1]);
+        }
+
+        drop(scan);
+
+        assert_eq!(vec, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
+    }
 }
