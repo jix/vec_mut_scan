@@ -1,6 +1,10 @@
 //! Forward scan over a vector with mutation and item removal.
-use std::{
-    collections::VecDeque,
+#![no_std]
+
+extern crate alloc;
+
+use alloc::{collections::VecDeque, vec::Vec};
+use core::{
     mem,
     ops::{Deref, DerefMut},
     ptr,
@@ -137,8 +141,8 @@ impl<'a, T: 'a> VecMutScan<'a, T> {
             // These slices cover the two disjoint parts 0..write and read..end which contain the
             // currently valid data.
             (
-                std::slice::from_raw_parts(self.base, self.write),
-                std::slice::from_raw_parts(self.base.add(self.read), self.end - self.read),
+                core::slice::from_raw_parts(self.base, self.write),
+                core::slice::from_raw_parts(self.base.add(self.read), self.end - self.read),
             )
         }
     }
@@ -158,8 +162,8 @@ impl<'a, T: 'a> VecMutScan<'a, T> {
             // These slices cover the two disjoint parts 0..write and read..end which contain the
             // currently valid data.
             (
-                std::slice::from_raw_parts_mut(self.base, self.write),
-                std::slice::from_raw_parts_mut(self.base.add(self.read), self.end - self.read),
+                core::slice::from_raw_parts_mut(self.base, self.write),
+                core::slice::from_raw_parts_mut(self.base.add(self.read), self.end - self.read),
             )
         }
     }
@@ -220,7 +224,7 @@ impl<'s, 'a, T: 'a> VecMutScanItem<'s, 'a, T> {
 
     /// Replaces this item with a new value, returns the old value.
     ///
-    /// This is equivalent to assigning a new value or calling [`std::mem::replace`] on the mutable
+    /// This is equivalent to assigning a new value or calling [`mem::replace`] on the mutable
     /// reference obtained by using [`DerefMut`], but can avoid an intermediate move within the
     /// vector's buffer.
     pub fn replace(self, value: T) -> T {
@@ -446,10 +450,10 @@ impl<'a, T: 'a> VecGrowScan<'a, T> {
             // These slices cover the two disjoint parts 0..write and read..end which contain the
             // currently valid data.
             (
-                std::slice::from_raw_parts(self.base, self.write),
+                core::slice::from_raw_parts(self.base, self.write),
                 mid_l,
                 mid_r,
-                std::slice::from_raw_parts(self.base.add(self.read), self.end - self.read),
+                core::slice::from_raw_parts(self.base.add(self.read), self.end - self.read),
             )
         }
     }
@@ -471,10 +475,10 @@ impl<'a, T: 'a> VecGrowScan<'a, T> {
             // These slices cover the two disjoint parts 0..write and read..end which contain the
             // currently valid data.
             (
-                std::slice::from_raw_parts_mut(self.base, self.write),
+                core::slice::from_raw_parts_mut(self.base, self.write),
                 mid_l,
                 mid_r,
-                std::slice::from_raw_parts_mut(self.base.add(self.read), self.end - self.read),
+                core::slice::from_raw_parts_mut(self.base.add(self.read), self.end - self.read),
             )
         }
     }
@@ -606,7 +610,7 @@ impl<'s, 'a, T: 'a> VecGrowScanItem<'s, 'a, T> {
 
     /// Replaces this item with a new value, returns the old value.
     ///
-    /// This is equivalent to assigning a new value or calling [`std::mem::replace`] on the mutable
+    /// This is equivalent to assigning a new value or calling [`mem::replace`] on the mutable
     /// reference obtained by using [`DerefMut`], but can avoid an intermediate move within the
     /// vector's buffer.
     pub fn replace(mut self, value: T) -> T {
@@ -745,7 +749,7 @@ impl<'s, 'a, T: 'a> Drop for VecGrowScanItem<'s, 'a, T> {
 mod tests {
     use super::*;
 
-    use std::rc::Rc;
+    use alloc::{boxed::Box, rc::Rc, vec};
 
     #[test]
     fn check_item_drops() {
