@@ -1,6 +1,5 @@
 # vec_mut_scan
 
-[![ci][ci-badge]](https://github.com/jix/vec_mut_scan/actions?query=workflow%3A%22Check+Last+Release%22)
 [![github][github-badge]](https://github.com/jix/vec_mut_scan)
 [![crates.io][crate-badge]](https://crates.io/crates/vec_mut_scan)
 [![docs.rs][docs-badge]](https://docs.rs/vec_mut_scan/*/vec_mut_scan)
@@ -35,7 +34,6 @@ for inclusion in this software by you shall be licensed as defined in
 [COPYRIGHT](COPYRIGHT).
 
 
-[ci-badge]: https://img.shields.io/github/workflow/status/jix/vec_mut_scan/Check%20Last%20Release?style=flat-square
 [github-badge]: https://img.shields.io/badge/github-jix/vec_mut_scan-blueviolet?style=flat-square
 [crate-badge]: https://img.shields.io/crates/v/vec_mut_scan?style=flat-square
 [docs-badge]: https://img.shields.io/badge/docs.rs-vec_mut_scan-informational?style=flat-square
