@@ -1,13 +1,14 @@
 [package]
 name = "vec_mut_scan"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Jannis Harder <me@jix.one>"]
 edition = "2018"
 description = "Forward scan over a vector with mutation and item removal"
 repository = "https://github.com/jix/vec_mut_scan"
 license = "0BSD"
 readme = "README.md"
-keywords = ["vec", "retain", "drain", "drain_filter"]
-categories = ["algorithms", "data-structures"]
+keywords = ["no_std", "vec", "retain", "drain", "drain_filter"]
+categories = ["no-std", "algorithms", "data-structures"]
+rust-version = "1.36.0"
 
 [dependencies]
