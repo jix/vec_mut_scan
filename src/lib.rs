@@ -782,7 +782,7 @@ mod tests {
         let _also_keep_copy_1 = also_keep.clone();
         let _also_keep_copy_2 = also_keep.clone();
 
-        let ref_counts: Vec<_> = input_copy.iter().map(|rc| Rc::strong_count(rc)).collect();
+        let ref_counts: Vec<_> = input_copy.iter().map(Rc::strong_count).collect();
 
         assert_eq!(ref_counts, vec![2, 2, 1, 3, 1, 4, 2, 2]);
         assert_eq!(keep.map(|rc| Rc::strong_count(&rc)), Some(3));
@@ -873,7 +873,7 @@ mod tests {
         let _also_keep_copy_1 = also_keep.clone();
         let _also_keep_copy_2 = also_keep.clone();
 
-        let ref_counts: Vec<_> = input_copy.iter().map(|rc| Rc::strong_count(rc)).collect();
+        let ref_counts: Vec<_> = input_copy.iter().map(Rc::strong_count).collect();
 
         assert_eq!(ref_counts, vec![2, 2, 1, 3, 1, 4, 2, 2]);
         assert_eq!(keep.map(|rc| Rc::strong_count(&rc)), Some(3));
